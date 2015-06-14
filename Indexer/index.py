@@ -10,10 +10,10 @@ class Index:
         self.dictionary = {}
     
     def add_term(self, term, posting):
-        plist = self.dictionary[str(term)]
-        if (plist is None or plist.isEmpty()):
-            self.dictionary[str(term)] = [posting]
+        if (term not in self.dictionary.keys()):
+            self.dictionary[term] = [posting]
         else :
+            plist = self.dictionary[term]
             plist.append(posting)
     
     def add_docVector(self, docSpace, doc_id):
@@ -30,9 +30,9 @@ class DocSpace:
         self.vector_dict = {}
         
     def add_document(self, doc_id, term_list):
-        self.vector_dict[str(doc_id)] = reduce(term_list) 
+        self.vector_dict[doc_id] = self.term_reduce(term_list) 
         
-    def reduce(self, term_list):
+    def term_reduce(self, term_list):
         return Counter(term_list)
     
     def get_posting_bag(self, doc_id):
