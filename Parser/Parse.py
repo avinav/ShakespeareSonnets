@@ -10,7 +10,7 @@ from util.Document import Document
 
 def create_document(doc, doc_path):
     f = open(doc_path + "/" + doc.name, "w+")
-    f.writelines(doc.term_list)
+    f.write('\n'.join(doc.term_list) + '\n')
     f.close()
     
 def parse(name, content, doc_path):

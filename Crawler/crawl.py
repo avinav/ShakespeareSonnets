@@ -3,13 +3,16 @@ Created on Apr 27, 2015
 
 @author: avinav
 '''
+
 import ConfigParser
 import requests
 import pickle
+
 from bs4 import BeautifulSoup
 from Parser import Parse
 from Indexer.index import Index
 from Indexer.index import DocSpace
+
 
 def crawl(url, **kwargs):
     doc_path = kwargs.get('doc_path')
