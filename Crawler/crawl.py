@@ -32,6 +32,8 @@ def crawl(url, **kwargs):
         doc = Parse.parse(atag['href'], content.text, doc_path)
         
         document_map[doc.id] = doc
+        # add code to add term_id/term_text, term_object in term_map
+    
         docSpace.add_document(doc.id, doc.term_list)
         index.add_docVector(docSpace, doc.id)
         i += 1

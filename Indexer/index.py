@@ -33,7 +33,8 @@ class DocSpace:
         self.vector_dict[doc_id] = self.term_reduce(term_list) 
         
     def term_reduce(self, term_list):
-        return Counter(term_list)
+        term_dict =  Counter(term_list)
+        return term_dict
     
     def get_posting_bag(self, doc_id):
         if  (doc_id not in self.vector_dict.keys()):
@@ -50,4 +51,15 @@ class Posting:
         self.doc_id = doc_id
         self.term = term
         self.tfreq = tfreq
+        
+class Term:
+    counter = -1
+    def __init__(self, term_text):
+        Term.counter += 1
+        self.term_id = Term.counter
+        self.term_text = term_text
+        self.docfreq = 1
+    def increment_docfreq(self):
+        self.docfreq += 1
+        
         
