@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<form action="" method="POST" name='search'>
+	{{ form.hidden_tag() }}
+	<div class='search_input'>
+		<table>
+			<tr>
+				<td>{{ form.query(size=80) }}</td>
+				<td><input type='submit' value='Search'></td>
+			</tr>
+			<tr>
+				<td>
+				{% for error in form.query.errors %}
+					<span style='color:red;font-size:12'> {{ error }} </span>
+				{% endfor %}
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+</form>
+<div class='search_result'>
+	<table>
+		<tr>
+			<td>
+				<span>Result</span>
+			</td>
+		</tr>
+		{% for r in res %}
+		<tr>
+			<td>
+				{{ r }}
+			</td>
+		</tr>
+		{% endfor %}
+</div>
+
+{% endblock %}

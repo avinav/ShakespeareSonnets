@@ -1,5 +1,6 @@
 import re
 from nltk.stem.porter import PorterStemmer
+import os
 
 class Token_Filter_SC:
     exp = r"[^A-Za-z0-9]+"
@@ -11,7 +12,8 @@ class Token_Filter_SC:
         return new_word_list
     
 class Token_Filter_StopWords:
-    f = open('../util/stopwords.txt','r')
+    fname = os.path.join(os.path.dirname(__file__), '../util/stopwords.txt')
+    f = open(fname,'r')
     stop_words = set(f.readlines())
     f.close()
     

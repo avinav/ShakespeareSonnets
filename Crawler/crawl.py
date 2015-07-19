@@ -4,17 +4,12 @@ Created on Apr 27, 2015
 @author: avinav
 '''
 
-import ConfigParser
 import requests
-import pickle
-
 from bs4 import BeautifulSoup
 from Parser import Parse
-from Indexer.index import Index
-from Indexer.index import DocSpace
+import Tokenizer.tokenize 
 
-
-def crawl(url, **kwargs):
+def crawl(url, index, docSpace, document_map, termMap, **kwargs):
     doc_path = kwargs.get('doc_path')
     atags = getChildren(url)
     i = 0
@@ -30,13 +25,14 @@ def crawl(url, **kwargs):
         for e in content.find_all('br'):
             e.extract()
         doc = Parse.parse(atag['href'], content.text, doc_path)
-        
+        Tokenizer.tokenize.add_termMap(termMap, doc)
         document_map[doc.id] = doc
         # add code to add term_id/term_text, term_object in term_map
     
         docSpace.add_document(doc.id, doc.term_list)
         index.add_docVector(docSpace, doc.id)
         i += 1
+    print i
     
 def getChildren(url):
     r = requests.get(url)
@@ -45,19 +41,4 @@ def getChildren(url):
     atags = trows[1].find_all('a')
     return atags
     
-#---- Script starts here
-Config = ConfigParser.ConfigParser()
-Config.read("../util/indexer.cfg")
-url = Config.get("crawler","url")
-doc_path = Config.get("parser","doc_path")
-index = Index()
-docSpace = DocSpace()
-document_map = {}
-crawl(url, doc_path=doc_path)
-
-data = {}
-data['index'] = index
-data['docSpace'] = docSpace
-data['document_map'] = document_map
-pickle.dump(data,open('../data/data.p','w'))
 

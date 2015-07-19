@@ -5,6 +5,7 @@ Created on Jun 12, 2015
 '''
 from collections import Counter
 
+# dictionary: {term1: [Posting(),...], term2: [Posting(), ...], ... }
 class Index:
     def __init__(self):
         self.dictionary = {}
@@ -24,7 +25,8 @@ class Index:
     def add_docSpace(self, docSpace):
         for doc_id in docSpace.vector_dict.keys():
             self.add_docVector(docSpace, doc_id)
-        
+
+# vector_dict: {doc_id : {term1: tfreq, term2:tfreq, ... }, doc_id: ...}
 class DocSpace:
     def __init__(self):
         self.vector_dict = {}
@@ -51,6 +53,15 @@ class Posting:
         self.doc_id = doc_id
         self.term = term
         self.tfreq = tfreq
+    @staticmethod
+    def get_posting_list_dict(plist):
+        plist_dict = {}
+        for pos in plist:
+            if (pos.doc_id in plist_dict.keys()):
+                plist_dict[pos.doc_id].append(pos)
+            else :
+                plist_dict[pos.doc_id] = [pos]
+        return plist_dict
         
 class Term:
     counter = -1
