@@ -20,20 +20,22 @@
 	</div>
 	
 </form>
-<div class='search_result'>
+<div class='search_result' style='width:100%'>
+	<div style='float:left; width:20%'>
 	<table>
-		<tr>
-			<td>
-				<span>Result</span>
-			</td>
-		</tr>
 		{% for r in res %}
 		<tr>
 			<td>
-				{{ r }}
+				<span><a href='#' onclick="document.getElementById('contentFrame').src='{{ r[0] }}' ">{{ r[1] }}</a></span>
 			</td>
 		</tr>
 		{% endfor %}
+	</table>
+</div>
+<div style="float:right;width:80%;">
+	{% if res is defined and res|length > 0 %}
+	<iframe id='contentFrame' name='contentFrame' src='{{ res[0][0] }}' style="width:100%; height:100%" />
+	{% endif %}
 </div>
 
 {% endblock %}

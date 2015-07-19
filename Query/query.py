@@ -8,6 +8,9 @@ import Tokenizer.tokenize as tk
 import math
 import operator
 import pickle
+import re
+import ConfigParser
+import os
 
 class QueryIndex:
     def __init__(self, index, docSpace, docMap, termMap):
@@ -16,7 +19,9 @@ class QueryIndex:
         self.docMap = docMap
         self.termMap = termMap
         self.N = len(docMap.keys())
-        print self.N
+        config = ConfigParser.ConfigParser()
+        config.read(os.path.join(os.path.dirname(__file__),"../util/indexer.cfg"))
+        self.url = config.get("crawler","url")
         
     def get_term_list(self, phrase):
         word_list = phrase.split()
@@ -79,6 +84,15 @@ class QueryIndex:
             score[docid] /= (math.sqrt(norm_tf)*math.sqrt(norm_idf))
             ctr += 1
         return score
+
+    def query_from_server(self, phrase):
+        score = self.query(phrase)
+        res = []
+        for doc_id, sc in score:
+            doc_url = self.url + self.docMap[doc_id].name
+            docName = 'Sonnet ' + str(int(re.findall(r'\d+',doc_url)[0]))
+            res.append((doc_url,docName))
+        return res
     
 def getQueryIndex(data_file):
     data = pickle.load(open(data_file,'r'))
