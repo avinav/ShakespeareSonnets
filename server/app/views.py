@@ -3,6 +3,7 @@ from app import app
 from flask import render_template, flash, redirect
 from .forms import SearchForm
 
+@app.route('/', methods = ['GET','POST'])
 @app.route('/index', methods = ['GET','POST'])
 def index():
     form = SearchForm()
