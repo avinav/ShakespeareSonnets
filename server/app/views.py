@@ -9,6 +9,7 @@ def index():
     form = SearchForm()
     query = ""
     res = None
+
     if form.validate_on_submit():
         res = queryIndex.query_from_server(form.query.data)
     return render_template("index.html",
