@@ -23,15 +23,14 @@
 	<div style='float:left; width:20%'>
 		{% if res is not none %}
 		{% if res|length > 0 %}
-		<table>
+		<table><tr><td><span style='font-size:18'><b>Results</b></span></td></tr>
+			<tr><td>
+	<ul>
 		{% for r in res %}
-		<tr>
-			<td>
-				<span><a href='#' onclick="document.getElementById('contentFrame').src='{{ r[0] }}' ">{{ r[1] }}</a></span>
-			</td>
-		</tr>
+		<li><span><a href='#' onclick="document.getElementById('contentFrame').src='{{ r[0] }}' ">{{ r[1] }}</a></span></li>
 		{% endfor %}
-	</table>
+	</ul>
+		</td></tr></table>
 		{% else %}
 		<span>No Results Foud!</span>
 		{% endif %}
