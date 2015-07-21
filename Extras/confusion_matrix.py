@@ -36,6 +36,10 @@ def display_confusion_matrix(conf_matrix, conf_matrix_string, num_labels, labels
     pylab.savefig(fig_title+".png", format="png")
     #fig.show()
 
+def getAccuracy(conf_matrix, num_labels):
+    total_acc = np.average(np.diagonal(conf_matrix), weights = num_labels)
+    return total_acc
+
 def reduce_label_binary(labels, true_label):
     new_labels = []
     for label in labels:

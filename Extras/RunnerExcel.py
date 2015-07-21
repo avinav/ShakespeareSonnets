@@ -2,15 +2,16 @@ import xlrd
 import Parser.Parse as Parse
 from Indexer.index import DocSpace
 from Extras.jaccardIndex import JaccardIndex
-import pickle
+import Tokenizer
+from Indexer.index import Index
 import numpy as np
-from collections import Counter
+import operator
 from Extras.confusion_matrix import *
-import matplotlib.pyplot as plt
-import pylab
 
 def get_docSpace_excel(filename, sheetname, col_no):
     docMap = {}
+    termMap = {}
+    index = Index()
     docSpace = DocSpace()
     workbook = xlrd.open_workbook(filename)
     worksheet = workbook.sheet_by_name(sheetname)
@@ -22,10 +23,12 @@ def get_docSpace_excel(filename, sheetname, col_no):
         text = worksheet.cell_value(curr_row, col_no)
 #         doc = Parse.parse("Rumor" + str(curr_row), text)
         doc = Parse.parse(doc_names[curr_row], text)
+        Tokenizer.tokenize.add_termMap(termMap, doc)
         docMap[doc.id] = doc
         docSpace.add_document(doc.id, doc.term_list)
+        index.add_docVector(docSpace, doc.id)
         curr_row += 1
-    return docMap, docSpace
+    return docMap, docSpace, termMap, index
 
 def get_tweet_excel(filename, sheetname, col_no):
     workbook = xlrd.open_workbook(filename)
@@ -42,70 +45,49 @@ def get_tweet_excel(filename, sheetname, col_no):
         curr_row += 1   
     return search_text_list
         
-def query_list(search_text_list, docMap, docSpace, thresh = -1):
+def query_list_jacc(search_text_list, docMap, docSpace, thresh = -1):
     jIndex = JaccardIndex(docMap, docSpace)
     result = []
     print "thresh here:",thresh
     for search_text in search_text_list:
         score_dict = jIndex.query(search_text)
         result.append(jIndex.result_tag(score_dict,thresh))
-    return result, score_dict
+    return result
 
-#------- script starts here
+def query_list_vsm(search_text_list, docMap, queryIndex, thresh = -1):
+    docid_set = set(docMap.keys())
+    pred_labels = []
+    for text in search_text_list:
+        term_list = queryIndex.get_term_list(text)
+        score = queryIndex.vsm_score(term_list, docid_set)
+        score_sorted = sorted(score.items(), key=operator.itemgetter(1), reverse=True)
+        if len(score_sorted) > 0:
+            if score_sorted[0][1] < thresh:
+                pred_labels.append('NA')
+            else :            
+                pred_labels.append(docMap[score_sorted[0][0]].name)
+        else :
+            pred_labels.append('NA')
+    return pred_labels
 
-rumor_filename = "../util/Rumor Coding_Intercoder_Round3_Eval5.xlsx"
-tweet_filename = "../util/Rumor Coding_Intercoder_Round3_Eval5.xlsx"
-thresh = 0.0068
-# f = open(tweet_filename, 'r')
-# search_text_list = f.readlines().split("\n")
-docMap, docSpace = get_docSpace_excel(rumor_filename, "Rumor Examples", 2)
-search_text_list = get_tweet_excel(tweet_filename, "test_jaccard", 2)
-true_labels = get_tweet_excel(tweet_filename,"test_jaccard",3)
-#print "search text list: ", search_text_list
-#print "docSpace: ", docSpace.vector_dict
-
-# FOR ROC
-'''
-tpr_list = []
-fpr_list = []
-thresh_list = np.arange(0,0.2,0.001)
-for thresh in thresh_list:
-    result, score_dict = query_list(search_text_list, docMap, docSpace,thresh)
-    print "thresh:",thresh
-    tpr, fpr = roc_tpr_fpr(true_labels, result)
-    print "tpr, fpr: ", tpr,fpr
-    tpr_list.append(tpr)
-    fpr_list.append(fpr)
-pickle.dump({'tpr':tpr_list,'fpr':fpr_list},open('tpr_fpr.p','w'))
-fig = plt.figure()
-plt.plot(fpr_list, tpr_list,marker='o')
-ax = plt.gca()
-#i = 0
-#for xy in zip(fpr_list, tpr_list): 
-#    thresh = thresh_list[i]
-#    print thresh
-#    ax.annotate(str(thresh), xy=xy, textcoords='data')
-plt.title("JACCARD ROC CURVE")
-plt.xlabel("FPR of Rumour")
-plt.ylabel("TPR of Rumour")
-pylab.savefig("roc_curve_jaccard.png",format="png")
-'''
-
-
-# For displaying confusion matrix
-result, score_dict = query_list(search_text_list, docMap, docSpace,thresh)
-#print "score ", score_dict
-#pickle.dump(result, open('resultwithna.p','w'))
-#print "\n".join(result)
-doc_names = ['R1','R3','R4','R5','R7','NA']
-count_dict = Counter(true_labels)
-num_labels = np.array([count_dict[lab] for lab in doc_names])
-conf_matrix, conf_matrix_string = confusion_matrix(true_labels, result, doc_names)
-tpr,fpr = roc_tpr_fpr(true_labels,result)
-print tpr,fpr
-display_confusion_matrix(conf_matrix, conf_matrix_string, num_labels, doc_names,"Jacc_" +str(thresh))
-data = {'num_labels' : num_labels, 'conf_matrix':conf_matrix, 
-        'conf_matrix_string':conf_matrix_string, 'true_labels':true_labels,
-        'pred_labels':result, 'doc_names':doc_names}
-
-pickle.dump(data,open('confwithna.p','w'))
+def generate_roc_curve(search_text_list, docMap, queryIndex, thresh_list, true_labels, fig_title):
+#     thresh_list = np.arange(0,0.2,0.001)
+    tpr_list = []
+    fpr_list = []
+    for thresh in thresh_list:
+        result = query_list_vsm(search_text_list, docMap, queryIndex,thresh)
+        tpr, fpr = roc_tpr_fpr(true_labels, result)
+        tpr_list.append(tpr)
+        fpr_list.append(fpr)
+    fig = plt.figure()
+    plt.plot(fpr_list, tpr_list,marker='o')
+    ax = plt.gca()
+    #i = 0
+    #for xy in zip(fpr_list, tpr_list): 
+    #    thresh = thresh_list[i]
+    #    print thresh
+    #    ax.annotate(str(thresh), xy=xy, textcoords='data')
+    plt.title(fig_title)
+    plt.xlabel("FPR of Rumour")
+    plt.ylabel("TPR of Rumour")
+    pylab.savefig(fig_title + ".png",format="png")

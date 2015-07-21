@@ -51,14 +51,14 @@ class QueryIndex:
             docid_set, posting_bag = self.intersect_list(plist, docid_set, posting_bag)
         return docid_set, posting_bag
     
-    def query(self, phrase):
+    def query(self, phrase, k = -1):
         term_list = self.get_term_list(phrase)
         pl_list = []
         for term in term_list:
             pl_list.append(self.fetch_posting_list(term))
         docid_set, posting_bag = self.intersect_posting_list(pl_list)
-        score = self.vsm_score(term_list, docid_set)
-        score_sorted = sorted(score.items(), key=operator.itemgetter(1))
+        score = self.vsm_score(term_list, docid_set, k)
+        score_sorted = sorted(score.items(), key=operator.itemgetter(1), reverse=True)
         return score_sorted
     
     def vsm_score(self, term_list, docid_set, k = -1):
@@ -66,8 +66,8 @@ class QueryIndex:
         ctr = 0
         score = {}
         for docid in docid_set:
-            if ctr >= k:
-                break
+#             if ctr >= k:
+#                 break
             docVector = self.docSpace.vector_dict[docid]
             score[docid] = 0
             norm_tf = 0
@@ -81,12 +81,12 @@ class QueryIndex:
                     norm_tf += tf**2
                     norm_idf += idf**2
                     score[docid] += tf*idf
-            score[docid] /= (math.sqrt(norm_tf)*math.sqrt(norm_idf))
+#             score[docid] /= (math.sqrt(norm_tf)*math.sqrt(norm_idf))
             ctr += 1
         return score
 
-    def query_from_server(self, phrase):
-        score = self.query(phrase)
+    def query_from_server(self, phrase, k = -1):
+        score = self.query(phrase, k)
         res = []
         for doc_id, sc in score:
             doc_url = self.url + self.docMap[doc_id].name
